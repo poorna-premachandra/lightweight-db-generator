@@ -12,7 +12,7 @@ defaults:
 tables:
   users:
     subset:
-      strategy: sample
+      strategy: sample                          # sample | all | fk_closure
       # time_window_days: 180
       root: true                                # starting point for fk_closure
       order_by: "created_at DESC"
@@ -22,20 +22,20 @@ tables:
       sequence_offset: 1000000
     columns:
       id:
-        sensitivity: public
-        strategy: keep
+        sensitivity: public                     # public | internal | pii | secret
+        strategy: keep                          # keep | mask | synthesize
         primary_key: true
       username:
         sensitivity: internal
         strategy: mask
         mask:
-          type: username
+          type: username                        # username | numeric_noise | category_map
           deterministic_key: id
       email:
         sensitivity: pii
         strategy: synthesize
         synth:
-          type: email
+          type: email                           # email | password_hash | address | credit_card
           deterministic_key: id
           domain: dev.local
         unique: true
@@ -101,7 +101,7 @@ tables:
         - column: order_id
           table: orders
           column_ref: id
-    processing_order: 3                       # Third to process
+    processing_order: 3                         # Third to process
     columns:
       id:
         sensitivity: public
@@ -116,7 +116,7 @@ tables:
         strategy: mask
         mask:
           type: category_map
-          deterministic_key: id                # stable remap within same set
+          deterministic_key: id                 # stable remap within same set
           preserve_domain: true
       card_number:
         sensitivity: secret
@@ -124,7 +124,7 @@ tables:
         synth:
           type: credit_card
           deterministic_key: id
-          format: "last4-only"              # produce XXXX-XXXX-XXXX-1234
+          format: "last4-only"                  # produce XXXX-XXXX-XXXX-1234
       transaction_id:
         sensitivity: internal
         strategy: keep
