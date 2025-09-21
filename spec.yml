@@ -1,0 +1,144 @@
+version: 1
+defaults:
+  subset:
+    strategy: sample                            # sample | all | fk_closure
+    max_rows: 100000                            # hard cap per table
+    time_window_days: 180                       # default lookback
+  masking:
+    deterministic_salt: "CHANGE-ME"
+    email_domain: "dev.local"
+    preserve_length: true
+
+tables:
+  users:
+    subset:
+      strategy: sample
+      # time_window_days: 180
+      root: true                                # starting point for fk_closure
+      order_by: "created_at DESC"
+      max_rows: 5
+    processing_order: 1                         # First to process
+    post_load:
+      sequence_offset: 1000000
+    columns:
+      id:
+        sensitivity: public
+        strategy: keep
+        primary_key: true
+      username:
+        sensitivity: internal
+        strategy: mask
+        mask:
+          type: username
+          deterministic_key: id
+      email:
+        sensitivity: pii
+        strategy: synthesize
+        synth:
+          type: email
+          deterministic_key: id
+          domain: dev.local
+        unique: true
+      password_hash:
+        sensitivity: secret
+        strategy: synthesize
+        synth:
+          type: password_hash
+          deterministic_key: id
+      created_at:
+        sensitivity: public
+        strategy: keep
+      updated_at:
+        sensitivity: public
+        strategy: keep
+
+  orders:
+    subset:
+      strategy: fk_closure
+      time_window_days: 180
+      max_rows: 15
+    fk:
+      references:
+        - column: user_id
+          table: users
+          column_ref: id
+    processing_order: 2                         # Second to process
+    columns:
+      id:
+        sensitivity: public
+        strategy: keep
+        primary_key: true
+      user_id:
+        sensitivity: public
+        strategy: keep
+        references: users.id
+      total_amount:
+        sensitivity: internal
+        strategy: mask
+        mask:
+          type: numeric_noise
+          deterministic_key: id
+          percent: 5                            # ±5% noise
+      status:
+        sensitivity: public
+        strategy: keep
+      shipping_address:
+        sensitivity: pii
+        strategy: synthesize
+        synth:
+          type: address
+          deterministic_key: user_id
+      created_at:
+        sensitivity: public
+        strategy: keep
+
+  payments:
+    subset:
+      strategy: fk_closure
+      max_rows: 20
+    fk:
+      references:
+        - column: order_id
+          table: orders
+          column_ref: id
+    processing_order: 3                       # Third to process
+    columns:
+      id:
+        sensitivity: public
+        strategy: keep
+        primary_key: true
+      order_id:
+        sensitivity: public
+        strategy: keep
+        references: orders.id
+      payment_method:
+        sensitivity: internal
+        strategy: mask
+        mask:
+          type: category_map
+          deterministic_key: id                # stable remap within same set
+          preserve_domain: true
+      card_number:
+        sensitivity: secret
+        strategy: synthesize
+        synth:
+          type: credit_card
+          deterministic_key: id
+          format: "last4-only"              # produce XXXX-XXXX-XXXX-1234
+      transaction_id:
+        sensitivity: internal
+        strategy: keep
+        unique: true
+      amount:
+        sensitivity: internal
+        strategy: mask
+        mask:
+          type: numeric_noise
+          deterministic_key: order_id
+          percent: 5
+      status:
+        sensitivity: public
+        strategy: keep
+      created_at:
+        sensitivity: public
+        strategy: keep

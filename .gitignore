@@ -1,0 +1,57 @@
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven build files (script directory only)
+script/target/
+script/pom.xml.tag
+script/pom.xml.releaseBackup
+script/pom.xml.versionsBackup
+script/pom.xml.next
+script/release.properties
+script/dependency-reduced-pom.xml
+script/.flattened-pom.xml
+
+# IntelliJ IDEA files (script directory only)
+script/.idea/
+script/*.iws
+script/*.iml
+script/*.ipr
+script/out/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+# Environment files
+.env
+.env.local
+
+# Database dumps and data files
+*.dump
+*.sql.gz
+local_db/lightweight-dump.sql
+local_db/manifest.json
+
+# Docker volumes (if any)
+docker-volumes/
+
+# Temporary files
+*.swp
+*.swo
+*~
+*.bak
+*.backup

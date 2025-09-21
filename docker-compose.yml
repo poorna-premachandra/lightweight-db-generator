@@ -1,0 +1,54 @@
+services:
+  prod-mysql:
+    image: fuel50-prod-db
+    build:
+      context: ./prod_db
+    environment:
+      - MYSQL_ROOT_USER=root
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - "8881:3306"
+    networks:
+      - fuel50network
+  local-mysql:
+    image: fuel50-local-db
+    build:
+      context: ./local_db
+    environment:
+      - MYSQL_ROOT_USER=root
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - "8882:3306"
+    networks:
+      - fuel50network
+  local-db-generator:
+    image: fuel50-local-db-generator
+    build:
+      context: ./script
+      dockerfile: Dockerfile
+    volumes:
+      - ./spec.yml:/app/spec.yml:ro
+      - ./local_db:/app/output
+    networks:
+      - fuel50network
+    depends_on:
+      - prod-mysql
+    # command:
+    #   [
+    #     "java",
+    #     "-jar",
+    #     "/app/devdb-cli.jar",
+    #     "generate",
+    #     "--source",
+    #     "jdbc:mysql://prod-mysql:3306/fuel50_db",
+    #     "--config",
+    #     "/app/spec.yml",
+    #     "--output",
+    #     "/app/output",
+    #   ]
+    stdin_open: true
+    tty: true
+    command: ["bash"]
+
+networks:
+  fuel50network:
